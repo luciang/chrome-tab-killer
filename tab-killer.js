@@ -1,6 +1,4 @@
 var bg = {
-    keyVersion: "version",
-    url: "chrome://extensions/",
     contextMenuText: "Close tabs",
     contexts : ["all"],
     parentContextMenuId : undefined,
@@ -11,13 +9,15 @@ var bg = {
             "contexts": bg.contexts
         });
 
-	var fn = function(tabid) { chrome.tabs.get(tabid, bg.initContextMenu); };
+	var fn = function(tabid) { chrome.tabs.get(tabid, bg.resetSubMenu); };
 	chrome.tabs.onSelectionChanged.addListener(fn);
 	chrome.tabs.onUpdated.addListener(fn);
     },
 
-    initContextMenu: function(tab) {
-	var getDomain = function(url) { return url.split(/\/+/g)[1]; };
+    resetSubMenu: function(tab) {
+	function getDomain(url) {
+	    return url.split(/\/+/g)[1]; 
+	};
 
         var domain = ""
         if (tab !== undefined) 
@@ -29,37 +29,37 @@ var bg = {
 	}
 	bg.menus = [];
 
-	var filterTabs = function(closeif) {
+	function filterTabs(closeIf) {
 	    chrome.tabs.getAllInWindow(null, function(tabs) {
 		    for (var i = 0; i < tabs.length; i++) {
-			if (closeif(tabs[i])) 
+			if (closeIf(tabs[i]))
 			    chrome.tabs.remove(tabs[i].id, null);
 		    }
 		});
         };
 
-	function addMenu(title, closeCond) {
+	function addMenu(title, closeIf) {
             bg.menus.push(chrome.contextMenus.create({
 	        "title": title,
 	     	"contexts": bg.contexts,
 	       	"parentId": bg.parentContextMenuId,
 	       	"onclick": function(info, tab) {
-		    filterTabs(function(other) { return closeCond(other, tab); });
+		    filterTabs(function(other) { return closeIf(other, tab); });
 		},
-	   }));
+	    }));
 	}
 
-	addMenu("Close tabs to the left", 
+	addMenu("Left tabs", 
 		function(other, tab) { return other.index < tab.index; });
-	addMenu("Close tabs to the right", 
+	addMenu("Right tabs", 
 		function(other, tab) { return other.index > tab.index; });
-	addMenu("Close other tabs", 
-		function(other, tab) { return other.index != tab.index; });
-	addMenu("Close current tab", 
+	addMenu("This tab", 
 		function(other, tab) { return other.index == tab.index; });
-	addMenu("Close tabs from this domain: " + domain,
+	addMenu("Other tabs", 
+		function(other, tab) { return other.index != tab.index; });
+	addMenu("From domain: " + domain,
 		function(other, tab) { return getDomain(other.url) === getDomain(tab.url); });
-	addMenu("Close tabs from other domain: " + domain, 
+	addMenu("Not from domain: " + domain, 
 		function(other, tab) { return getDomain(other.url) !== getDomain(tab.url); });
     },
 };
