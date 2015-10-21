@@ -1,0 +1,13 @@
+{
+   "background": {
+      "page": "background.htm"
+   },
+   "description": "Context menu to close - tabs to the left, tabs to the right, other tabs, tabs from same domain, current tab, window and more",
+   "icons": {
+     "128" : "x-128.png"
+   },
+   "manifest_version": 2,
+   "name": "Tab Killer",
+   "permissions": [ "contextMenus", "tabs" ],
+   "version": "1.1"
+}
