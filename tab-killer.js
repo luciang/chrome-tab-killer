@@ -61,6 +61,8 @@ var bg = {
 		function(other, tab) { return getDomain(other.url) === getDomain(tab.url); });
 	addMenu("Not from domain: " + domain, 
 		function(other, tab) { return getDomain(other.url) !== getDomain(tab.url); });
+	addMenu("This URL",
+		function(other, tab) { return other.url == tab.url; });
     },
 };
 
