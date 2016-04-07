@@ -19,7 +19,7 @@ var bg = {
       function(tabId, changeInfo, tab) {
         chrome.tabs.getCurrent(
           function(currentTab) {
-            if (tabId === currentTab.id)
+            if (currentTab !== undefined && tabId === currentTab.id)
               chrome.tabs.get(abId, bg.resetSubMenu);
           }
         );
@@ -51,11 +51,13 @@ var bg = {
 
     function filterTabs(closeIf) {
       chrome.tabs.getAllInWindow(null, function(tabs) {
+       let toRemove = [];
         for (var i = 0; i < tabs.length; i++) {
-          if (closeIf(tabs[i])) {
-            chrome.tabs.remove(tabs[i].id, null);
-          }
-        }
+	    if (closeIf(tabs, i)) {
+		toRemove.push(tabs[i].id);
+	    }
+	}
+	chrome.tabs.remove(toRemove, null);
       });
     };
 
@@ -64,35 +66,47 @@ var bg = {
         "title": title,
         "contexts": bg.contexts,
         "parentId": bg.parentContextMenuId,
-        "onclick": function(info, tab) {
-          filterTabs(function(other) { return closeIf(other, tab); });
+        "onclick": function(info, curTab) {
+          filterTabs(function(tabs, i) { return closeIf(tabs, i, curTab); });
         },
       }));
     }
 
+    addMenu("Duplicate tabs (same URL)",
+      function(tabs, i, curTab) {
+    for (var j = 0; j < i; j++) {
+        if (tabs[i].url === tabs[j].url) {
+      return true;
+        }
+    }
+    return false;
+      }
+    );
+
     addMenu("Left tabs",
-      function(other, tab) { return other.index < tab.index; });
+      function(tabs, i, curTab) { return tabs[i].index < curTab.index; });
     addMenu("Right tabs",
-      function(other, tab) { return other.index > tab.index; });
+      function(tabs, i, curTab) { return tabs[i].index > curTab.index; });
     addMenu("This tab",
-      function(other, tab) { return other.index == tab.index; });
+      function(tabs, i, curTab) { return tabs[i].index === curTab.index; });
     addMenu("Other tabs",
-      function(other, tab) { return other.index != tab.index; });
+      function(tabs, i, curTab) { return tabs[i].index !== curTab.index; });
     addMenu("From domain: " + domain,
-      function(other, tab) { return getDomain(other.url) === getDomain(tab.url); });
+      function(tabs, i, curTab) { return getDomain(tabs[i].url) === getDomain(curTab.url); });
     addMenu("Not from domain: " + domain,
-      function(other, tab) { return getDomain(other.url) !== getDomain(tab.url); });
+      function(tabs, i, curTab) { return getDomain(tabs[i].url) !== getDomain(curTab.url); });
     addMenu("This URL",
-      function(other, tab) { return other.url == tab.url; });
+      function(tabs, i, curTab) { return tabs[i].url === curTab.url; });
+
 
     let parts = tab.url.split(/\/+/g);
     for (i = 2; i < parts.length; i++) {
       let index = i;
       addMenu(
-        "Sub-URL: " + subUrl(tab, index),
-        function(other, tab) {
-          return getDomain(other.url) === getDomain(tab.url) &&
-          subUrl(other, index) === subUrl(tab, index);
+        "URL path: " + subUrl(tab, index),
+        function(tabs, i, curTab) {
+          return getDomain(tabs[i].url) === getDomain(tab.url) &&
+           subUrl(tabs[i], index) === subUrl(tab, index);
         }
       );
     }
