@@ -100,7 +100,7 @@ var bg = {
 
 
     let parts = tab.url.split(/\/+/g);
-    for (i = 2; i < parts.length; i++) {
+    for (i = 1; i < parts.length; i++) {
       let index = i;
       addMenu(
         "URL path: " + subUrl(tab, index),
