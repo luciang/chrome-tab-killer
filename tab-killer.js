@@ -30,13 +30,18 @@ var bg = {
   resetSubMenu: function(tab) {
     "use strict";
 
-    function getDomain(url) {
-      return url.split(/\/+/g)[1];
-    };
-
-    function subUrl(tab, index) {
-      return tab.url.split(/\/+/g).slice(2, index + 1).join('/');
+    // See @urlParts example. First 4 items are protocol-specific.
+    let urlPartsSkip = 4;
+    function urlParts(url) {
+      // Split by '/' and '?'.
+      // > 'https://a.com/?/b'.split(/([\/\?])/g)
+      // [ 'https:', '/', '', '/', 'a.com', '/', '', '?', '', '/', 'b' ]
+      return url.split(/([\/\?])/g);
     }
+
+    function getDomain(url) {
+      return urlParts(url)[urlPartsSkip];
+    };
 
     var domain = "";
     if (tab !== undefined) {
@@ -49,15 +54,16 @@ var bg = {
     }
     bg.menus = [];
 
+    // Filter in reverse order so the last tab (in chrome order) remains open.
     function filterTabs(closeIf) {
       chrome.tabs.getAllInWindow(null, function(tabs) {
        let toRemove = [];
-        for (var i = 0; i < tabs.length; i++) {
-	    if (closeIf(tabs, i)) {
-		toRemove.push(tabs[i].id);
-	    }
-	}
-	chrome.tabs.remove(toRemove, null);
+        for (var i = tabs.length - 1; i != 0; i--) {
+          if (closeIf(tabs, i)) {
+            toRemove.push(tabs[i].id);
+          }
+        }
+        chrome.tabs.remove(toRemove, null);
       });
     };
 
@@ -74,12 +80,12 @@ var bg = {
 
     addMenu("Duplicate tabs (same URL)",
       function(tabs, i, curTab) {
-    for (var j = 0; j < i; j++) {
-        if (tabs[i].url === tabs[j].url) {
-      return true;
+        for (var j = i + 1; j < tabs.length; j++) {
+          if (tabs[i].url === tabs[j].url) {
+            return true;
+          }
         }
-    }
-    return false;
+        return false;
       }
     );
 
@@ -99,14 +105,21 @@ var bg = {
       function(tabs, i, curTab) { return tabs[i].url === curTab.url; });
 
 
-    let parts = tab.url.split(/\/+/g);
-    for (i = 1; i < parts.length; i++) {
+    let parts = urlParts(tab.url);
+    for (i = urlPartsSkip; i < parts.length; i++) {
+      if (parts[i] === '' || parts[i] === '/' || parts[i] === '?') {
+        continue;
+      }
+
+      function subUrl(tab, lastPart) {
+        return urlParts(tab.url).slice(urlPartsSkip, lastPart).join('');
+      }
       let index = i;
       addMenu(
         "URL path: " + subUrl(tab, index),
         function(tabs, i, curTab) {
-          return getDomain(tabs[i].url) === getDomain(tab.url) &&
-           subUrl(tabs[i], index) === subUrl(tab, index);
+          return (getDomain(tabs[i].url) === getDomain(tab.url) &&
+                  subUrl(tabs[i], index) === subUrl(tab, index));
         }
       );
     }
