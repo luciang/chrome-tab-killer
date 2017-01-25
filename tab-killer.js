@@ -107,7 +107,10 @@ var bg = {
 
     let parts = urlParts(tab.url);
     for (i = kUrlPartsDomain; i < parts.length - 1; i++) {
+      // NOTE: iterate to len-1 to avoid creating an entry for the full URL
+      // (that's already covered by "This URL" above).
       if (parts[i] === '' || parts[i] === '/' || parts[i] === '?') {
+        // Avoid creating enries that don't differ or differ by a '/' or '?'
         continue;
       }
 
