@@ -106,13 +106,13 @@ var bg = {
 
 
     let parts = urlParts(tab.url);
-    for (i = urlPartsSkip; i < parts.length; i++) {
+    for (i = urlPartsSkip; i < parts.length - 1; i++) {
       if (parts[i] === '' || parts[i] === '/' || parts[i] === '?') {
         continue;
       }
 
       function subUrl(tab, lastPart) {
-        return urlParts(tab.url).slice(urlPartsSkip, lastPart).join('');
+        return urlParts(tab.url).slice(urlPartsSkip, lastPart + 1).join('');
       }
       let index = i;
       addMenu(
