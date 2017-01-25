@@ -31,7 +31,7 @@ var bg = {
     "use strict";
 
     // See @urlParts example. First 4 items are protocol-specific.
-    let urlPartsSkip = 4;
+    let kUrlPartsDomain = 4;
     function urlParts(url) {
       // Split by '/' and '?'.
       // > 'https://a.com/?/b'.split(/([\/\?])/g)
@@ -40,7 +40,7 @@ var bg = {
     }
 
     function getDomain(url) {
-      return urlParts(url)[urlPartsSkip];
+      return urlParts(url)[kUrlPartsDomain];
     };
 
     var domain = "";
@@ -106,13 +106,13 @@ var bg = {
 
 
     let parts = urlParts(tab.url);
-    for (i = urlPartsSkip; i < parts.length - 1; i++) {
+    for (i = kUrlPartsDomain; i < parts.length - 1; i++) {
       if (parts[i] === '' || parts[i] === '/' || parts[i] === '?') {
         continue;
       }
 
       function subUrl(tab, lastPart) {
-        return urlParts(tab.url).slice(urlPartsSkip, lastPart + 1).join('');
+        return urlParts(tab.url).slice(kUrlPartsDomain, lastPart + 1).join('');
       }
       let index = i;
       addMenu(
